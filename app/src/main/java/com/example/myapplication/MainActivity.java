@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     double longitude;
     TextView latText, lonText, weather;
     Button button;
-
+//test
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
