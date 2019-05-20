@@ -3,6 +3,7 @@ package com.example.myapplication;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.PointF;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -12,9 +13,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.JsonObject;
+import com.skt.Tmap.TMapPoint;
+import com.skt.Tmap.TMapView;
+
+import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,10 +44,47 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        map();
         initView();
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
+    }
+
+    private void map() {
+        LinearLayout linearLayoutTmap = (LinearLayout)findViewById(R.id.linearLayoutTmap);
+        TMapView tMapView = new TMapView(this);
+        tMapView.setSKTMapApiKey("api key");
+        linearLayoutTmap.addView(tMapView);
+
+        tMapView.setOnClickListenerCallBack(new TMapView.OnClickListenerCallback() {
+            @Override
+            public boolean onPressEvent(ArrayList arrayList, ArrayList arrayList1, TMapPoint tMapPoint, PointF pointF) {
+                //Toast.makeText(getApplicationContext(),"lon=" + tMapPoint.getLongitude() + "\nlat=" + tMapPoint.getLatitude(), Toast.LENGTH_SHORT).show();
+                return false;
+            }
+
+            @Override
+            public boolean onPressUpEvent(ArrayList arrayList, ArrayList arrayList1, TMapPoint tMapPoint, PointF pointF) {
+                Toast.makeText(getApplicationContext(),"lon=" + tMapPoint.getLongitude() + "\nlat=" + tMapPoint.getLatitude(), Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
+
+        tMapView.setOnLongClickListenerCallback(new TMapView.OnLongClickListenerCallback() {
+            @Override
+            public void onLongPressEvent(ArrayList arrayList, ArrayList arrayList1, TMapPoint tMapPoint) {
+                Toast.makeText(getApplicationContext(), "onLongPress~!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+// 지도 스크롤 종료
+        tMapView.setOnDisableScrollWithZoomLevelListener(new TMapView.OnDisableScrollWithZoomLevelCallback() {
+            @Override
+            public void onDisableScrollWithZoomLevelEvent(float zoom, TMapPoint centerPoint) {
+                //Toast.makeText(getApplicationContext(), "zoomLevel=" + zoom + "\nlon=" + centerPoint.getLongitude() + "\nlat=" + centerPoint.getLatitude(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void initView() {
@@ -95,6 +139,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         }
     }
 
+
+
     private void requestLocation() {
         //사용자로 부터 위치정보 권한체크
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -118,7 +164,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         @GET("weather/current/hourly")
         Call<JsonObject> getHourly(@Header("appkey") String appKey, @Query("version") int version,
                                    @Query("lat") double lat, @Query("lon") double lon);
+        @GET("tmap/traffic")
+        Call<JsonObject> getTraffic(@Header("appkey") String appKey, @Query("version") int version,
+                                    @Query("minLat") double minlat, @Query("minLon") double minlon,
+                                    @Query("maxLay") double maxlat, @Query("maxLon") double maxlon,
+                                    @Query("centerLat") double centerlat, @Query("centerLon") double centerlon,
+                                    @Query("trafficType") String type, @Query("radius") int n);
 
+    }
+
+    private void getTraffic(double centerlat, double centerlon){
+        Retrofit retrofit = new Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
+                .baseUrl(ApiService.BASEURL)
+                .build();
+        ApiService apiService = retrofit.create(ApiService.class);
+        //Call<JsonObject> call = apiService.getTraffic(ApiService.APPKEY,1,)
     }
 
     private void getWeather(double latitude, double longitude) {
