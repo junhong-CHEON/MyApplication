@@ -173,6 +173,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
     }
 
+    //교통정보
     private void getTraffic(double centerlat, double centerlon){
         Retrofit retrofit = new Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(ApiService.BASEURL)
