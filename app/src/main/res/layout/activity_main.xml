@@ -8,14 +8,14 @@
     tools:context="com.edge.weather.MainActivity">
 
     <LinearLayout
-        android:id = "@+id/linearLayoutTmap"
+        android:id="@+id/linearLayoutTmap"
         android:layout_width="match_parent"
-        android:layout_height="362dp"
+        android:layout_height="316dp"
         android:orientation="vertical"></LinearLayout>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="위도"
+        android:text="위치"
         android:textColor="@android:color/black"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="20dp"
@@ -24,35 +24,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:text="23151615"
-        android:id="@+id/latitude"
+        android:id="@+id/locate"
         android:textColor="@android:color/black"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="20dp"
         android:textSize="17dp"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="경도"
-        android:textColor="@android:color/black"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="20dp"
-        android:textSize="17dp"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:text="3213132"
-        android:id="@+id/longitude"
-        android:textColor="@android:color/black"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="20dp"
-        android:textSize="17dp"/>
+
     <Button
+        android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="날씨 받아오기"
-        android:id="@+id/button"
-        android:layout_marginTop="20dp"/>
+        android:layout_marginTop="20dp"
+        android:text="현재 위치 날씨" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -61,14 +46,15 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="20dp"
         android:textSize="17dp"/>
+
     <TextView
+        android:id="@+id/weather"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="20dp"
-        android:id="@+id/weather"
-        android:textSize="17dp"/>
+        android:textColor="@android:color/black"
+        android:textSize="17dp" />
 </LinearLayout>
 
 

@@ -17,7 +17,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.skt.Tmap.TMapPoint;
 import com.skt.Tmap.TMapView;
 
@@ -36,8 +39,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     LocationManager locationManager;
     double latitude;
     double longitude;
-    TextView latText, lonText, weather;
+    TextView weather, locate;
     Button button;
+    String city = null;
+    String county = null;
+    String village = null;
+    String sky = null;
+    String temp = null;
 //test
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             @Override
             public boolean onPressUpEvent(ArrayList arrayList, ArrayList arrayList1, TMapPoint tMapPoint, PointF pointF) {
                 Toast.makeText(getApplicationContext(),"lon=" + tMapPoint.getLongitude() + "\nlat=" + tMapPoint.getLatitude(), Toast.LENGTH_SHORT).show();
+                getWeather(tMapPoint.getLatitude(),tMapPoint.getLongitude());
                 return false;
             }
         });
@@ -89,8 +98,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
     private void initView() {
         //뷰세팅
-        latText = (TextView) findViewById(R.id.latitude);
-        lonText = (TextView) findViewById(R.id.longitude);
+        locate = (TextView) findViewById(R.id.locate);
         weather = (TextView) findViewById(R.id.weather);
         button = (Button) findViewById(R.id.button);
         button.setOnClickListener(this);
@@ -103,9 +111,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         날씨 api에 위도경도 값을 넘겨주고 위치 정보 모니터링을 제거한다.*/
         latitude = location.getLatitude();
         longitude = location.getLongitude();
-        //위도 경도 텍스트뷰에 보여주기
-        latText.setText(String.valueOf(latitude));
-        lonText.setText(String.valueOf(longitude));
         //날씨 가져오기 통신
         getWeather(latitude, longitude);
         //위치정보 모니터링 제거
@@ -138,8 +143,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 break;
         }
     }
-
-
 
     private void requestLocation() {
         //사용자로 부터 위치정보 권한체크
@@ -182,7 +185,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         //Call<JsonObject> call = apiService.getTraffic(ApiService.APPKEY,1,)
     }
 
-    private void getWeather(double latitude, double longitude) {
+     private void getWeather(final double latitude, double longitude) {
+        String[] data;
         Retrofit retrofit = new Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(ApiService.BASEURL)
                 .build();
@@ -195,10 +199,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                     //날씨데이터를 받아옴
                     JsonObject object = response.body();
                     if (object != null) {
-                        //데이터가 null 이 아니라면 날씨 데이터를 텍스트뷰로 보여주기
-                        weather.setText(object.toString());
+                        weatherParser(object);
+                        //날씨, 온도 텍스트 뷰 출력
+                        weather.setText(sky + temp);
+                        locate.setText(city + county + village);
                     }
-
                 }
             }
 
@@ -207,4 +212,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             }
         });
     }
+
+    public void weatherParser(JsonObject Object) {
+
+        JsonArray jarr = Object.getAsJsonObject("weather").getAsJsonArray("hourly");
+        JsonObject jobject = jarr.get(0).getAsJsonObject();
+
+        city = jobject.get("grid").getAsJsonObject().get("city").toString();
+        county = jobject.get("grid").getAsJsonObject().get("county").toString();
+        village = jobject.get("grid").getAsJsonObject().get("village").toString();
+        sky = jobject.get("sky").getAsJsonObject().get("name").toString();
+        temp = jobject.get("temperature").getAsJsonObject().get("tc").toString();
+
+    }
+
 }
