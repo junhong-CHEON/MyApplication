@@ -61,8 +61,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        requestLocation();
         initView();
+        map();
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
@@ -71,9 +71,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     private void map() {
         LinearLayout linearLayoutTmap = (LinearLayout)findViewById(R.id.linearLayoutTmap);
         final TMapView tMapView = new TMapView(this);
-        tMapView.setSKTMapApiKey("app key");
+        tMapView.setSKTMapApiKey("1a0702a6-c8e1-4196-9cc3-1f499aba19d5");
         linearLayoutTmap.addView(tMapView);
-        tMapView.setCenterPoint(longitude,latitude);
 
         tMapView.setOnClickListenerCallBack(new TMapView.OnClickListenerCallback() {
             @Override
@@ -142,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         latitude = location.getLatitude();
         longitude = location.getLongitude();
         //날씨 가져오기 통신
-        map();
         getWeather(latitude, longitude);
         getTraffic(latitude,longitude);
         //위치정보 모니터링 제거
@@ -192,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     private interface ApiService {
         //베이스 Url
         String BASEURL = "https://api2.sktelecom.com/";
-        String APPKEY = "app key";
+        String APPKEY = "1a0702a6-c8e1-4196-9cc3-1f499aba19d5";
 
         //get 메소드를 통한 http rest api 통신
         @GET("weather/current/hourly")
