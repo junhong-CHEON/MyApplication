@@ -3,6 +3,9 @@ package com.example.myapplication;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.location.Location;
 import android.location.LocationListener;
@@ -11,6 +14,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -21,8 +25,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.skt.Tmap.TMapCircle;
+import com.skt.Tmap.TMapData;
+import com.skt.Tmap.TMapMarkerItem;
 import com.skt.Tmap.TMapPoint;
 import com.skt.Tmap.TMapView;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -39,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     LocationManager locationManager;
     double latitude;
     double longitude;
-    TextView weather, locate;
+    TextView weather, locate, traffic;
     Button button;
     String city = null;
     String county = null;
@@ -52,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        map();
+        requestLocation();
         initView();
 
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -61,14 +70,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
     private void map() {
         LinearLayout linearLayoutTmap = (LinearLayout)findViewById(R.id.linearLayoutTmap);
-        TMapView tMapView = new TMapView(this);
-        tMapView.setSKTMapApiKey("api key");
+        final TMapView tMapView = new TMapView(this);
+        tMapView.setSKTMapApiKey("app key");
         linearLayoutTmap.addView(tMapView);
+        tMapView.setCenterPoint(longitude,latitude);
 
         tMapView.setOnClickListenerCallBack(new TMapView.OnClickListenerCallback() {
             @Override
             public boolean onPressEvent(ArrayList arrayList, ArrayList arrayList1, TMapPoint tMapPoint, PointF pointF) {
-                //Toast.makeText(getApplicationContext(),"lon=" + tMapPoint.getLongitude() + "\nlat=" + tMapPoint.getLatitude(), Toast.LENGTH_SHORT).show();
                 return false;
             }
 
@@ -84,6 +93,26 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             @Override
             public void onLongPressEvent(ArrayList arrayList, ArrayList arrayList1, TMapPoint tMapPoint) {
                 Toast.makeText(getApplicationContext(), "onLongPress~!", Toast.LENGTH_SHORT).show();
+                getTraffic(tMapPoint.getLatitude(),tMapPoint.getLongitude());
+
+                TMapCircle tMapCircle = new TMapCircle();
+                tMapCircle.setCenterPoint(tMapPoint);
+                tMapCircle.setRadius(300);
+                tMapCircle.setCircleWidth(2);
+                tMapCircle.setLineColor(Color.MAGENTA);
+                tMapCircle.setAreaColor(Color.GRAY);
+                tMapCircle.setAreaAlpha(100);
+                tMapView.addTMapCircle("circle",tMapCircle);
+
+                TMapMarkerItem markerItem1 = new TMapMarkerItem();
+                Bitmap bitmap= BitmapFactory.decodeResource(getApplicationContext().getResources(),R.drawable.marker);
+
+                markerItem1.setIcon(bitmap);
+                markerItem1.setPosition(0.5f,1.0f);
+                markerItem1.setTMapPoint(tMapPoint);
+                tMapView.addMarkerItem("markerItem1",markerItem1);
+
+                tMapView.setCenterPoint(tMapPoint.getLongitude(),tMapPoint.getLatitude(),true);
             }
         });
 
@@ -98,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
     private void initView() {
         //뷰세팅
+        traffic=(TextView)findViewById(R.id.traffic);
         locate = (TextView) findViewById(R.id.locate);
         weather = (TextView) findViewById(R.id.weather);
         button = (Button) findViewById(R.id.button);
@@ -112,7 +142,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         latitude = location.getLatitude();
         longitude = location.getLongitude();
         //날씨 가져오기 통신
+        map();
         getWeather(latitude, longitude);
+        getTraffic(latitude,longitude);
         //위치정보 모니터링 제거
         locationManager.removeUpdates(MainActivity.this);
     }
@@ -139,7 +171,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 if (locationManager != null) {
                     requestLocation();
                 }
-
                 break;
         }
     }
@@ -161,32 +192,49 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     private interface ApiService {
         //베이스 Url
         String BASEURL = "https://api2.sktelecom.com/";
-        String APPKEY = "api key";
+        String APPKEY = "app key";
 
         //get 메소드를 통한 http rest api 통신
         @GET("weather/current/hourly")
         Call<JsonObject> getHourly(@Header("appkey") String appKey, @Query("version") int version,
                                    @Query("lat") double lat, @Query("lon") double lon);
-        @GET("tmap/traffic")
-        Call<JsonObject> getTraffic(@Header("appkey") String appKey, @Query("version") int version,
-                                    @Query("minLat") double minlat, @Query("minLon") double minlon,
-                                    @Query("maxLay") double maxlat, @Query("maxLon") double maxlon,
-                                    @Query("centerLat") double centerlat, @Query("centerLon") double centerlon,
-                                    @Query("trafficType") String type, @Query("radius") int n);
 
+        @GET("tmap/traffic")
+        Call<JsonObject> getTraffic(@Query("appkey") String appKey, @Query("version") int version,
+                                    //@Query("minLat") double minlat, @Query("minLon") double minlon,
+                                    //@Query("maxLay") double maxlat, @Query("maxLon") double maxlon,
+                                    @Query("centerLat") double centerlat, @Query("centerLon") double centerlon,
+                                    //@Query("reqCoordType") String reqtype, @Query("resCoordType") String restype,
+                                    @Query("trafficType") String type, @Query("radius") int n,
+                                    @Query("zoomLevel") int level/*,@Query("sort") String sort*/);
     }
 
     //교통정보
-    private void getTraffic(double centerlat, double centerlon){
-        Retrofit retrofit = new Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
-                .baseUrl(ApiService.BASEURL)
-                .build();
-        ApiService apiService = retrofit.create(ApiService.class);
-        //Call<JsonObject> call = apiService.getTraffic(ApiService.APPKEY,1,)
+            private void getTraffic(double centerlat, double centerlon){
+                Retrofit retrofit = new Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
+                        .baseUrl(ApiService.BASEURL)
+                        .build();
+                ApiService apiService = retrofit.create(ApiService.class);
+                Call<JsonObject> call = apiService.getTraffic(ApiService.APPKEY,1,centerlat, centerlon,"AROUND",1,19);
+                call.enqueue(new Callback<JsonObject>() {
+                    @Override
+                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                        if(response.isSuccessful()){
+                            JsonObject object = response.body();
+                            if (object != null) {
+                                traffic.setText(null);
+                                trafficParser(object);
+                            }
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<JsonObject> call, Throwable t) {
+                        traffic.setText("fail");
+                    }
+        });
     }
 
      private void getWeather(final double latitude, double longitude) {
-        String[] data;
         Retrofit retrofit = new Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
                 .baseUrl(ApiService.BASEURL)
                 .build();
@@ -202,11 +250,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                         weatherParser(object);
                         //날씨, 온도 텍스트 뷰 출력
                         weather.setText(sky + temp);
-                        locate.setText(city + county + village);
+                        //locate.setText(city + county + village);
                     }
                 }
             }
-
             @Override
             public void onFailure(@NonNull Call<JsonObject> call, @NonNull Throwable t) {
             }
@@ -224,6 +271,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         sky = jobject.get("sky").getAsJsonObject().get("name").toString();
         temp = jobject.get("temperature").getAsJsonObject().get("tc").toString();
 
+    }
+
+    public void trafficParser(JsonObject Object){
+
+        JsonArray jarr = Object.getAsJsonArray("features");
+        for(int i = 0; i < jarr.size(); i++){
+            JsonObject jobject = (JsonObject)jarr.get(i).getAsJsonObject().get("properties");
+
+            traffic.append(jobject.get("name").toString() + "\n" +
+                    jobject.get("description").toString() + "\n" +
+                    "통행속도 : " + jobject.get("speed").toString() + "km/h" + "\n\n");
+        }
     }
 
 }
