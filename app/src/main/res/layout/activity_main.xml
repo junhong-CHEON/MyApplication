@@ -28,23 +28,10 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="20dp"
-                android:text="위치"
-                android:textColor="@android:color/black"
-                android:textSize="17dp" />
-
-            <TextView
-                android:id="@+id/locate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="20dp"
-                android:textColor="@android:color/black"
-                android:textSize="17dp"
-                tools:text="23151615" />
+                android:text="지도를 길게 누르면 누른 지점의 날씨와 주변 교통정보 안내\n버튼을 누르면 현재 위치 날씨와 주변 교통정보 안내" />
 
             <Button
                 android:id="@+id/button"
@@ -59,21 +46,49 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
-                android:text="결과"
+                android:text="위치"
+                android:textColor="@android:color/black"
+                android:textSize="17dp" />
+
+
+            <TextView
+                android:id="@+id/locate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:textColor="@android:color/black"
+                android:textSize="17dp"
+                tools:text="23151615" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:text="날씨"
                 android:textColor="@android:color/black"
                 android:textSize="17dp" />
 
             <TextView
-                android:id="@+id/traffic"
+                android:id="@+id/weather"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
                 android:textColor="@android:color/black"
                 android:textSize="17dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:text="주변교통 정보"
+                android:textColor="@android:color/black"
+                android:textSize="17dp" />
 
             <TextView
-                android:id="@+id/weather"
+                android:id="@+id/traffic"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"

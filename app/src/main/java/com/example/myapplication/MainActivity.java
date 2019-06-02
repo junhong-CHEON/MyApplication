@@ -44,12 +44,15 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Query;
 
-public class MainActivity extends AppCompatActivity implements LocationListener, View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements LocationListener{
+
     LocationManager locationManager;
+    double Setlatitude;
+    double Setlongitude;
     double latitude;
     double longitude;
     TextView weather, locate, traffic;
-    Button button;
+    String add;
     String city = null;
     String county = null;
     String village = null;
@@ -60,19 +63,68 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        initView();
-        map();
-
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+        Log.d("test", ""+longitude+""+latitude);
+        map();
+        initView();
 
     }
 
     private void map() {
-        LinearLayout linearLayoutTmap = (LinearLayout)findViewById(R.id.linearLayoutTmap);
+
+        LinearLayout linearLayoutTmap = (LinearLayout) findViewById(R.id.linearLayoutTmap);
         final TMapView tMapView = new TMapView(this);
-        tMapView.setSKTMapApiKey("1a0702a6-c8e1-4196-9cc3-1f499aba19d5");
+        tMapView.setSKTMapApiKey("api key");
         linearLayoutTmap.addView(tMapView);
+
+        Button button = (Button)findViewById(R.id.button);
+
+        button.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                if(locationManager != null) {
+                    requestLocation();
+                }
+                tMapView.setCenterPoint(longitude,latitude,true);
+                TMapData tMapData = new TMapData();
+                try {
+                    tMapData.convertGpsToAddress(latitude,longitude, new TMapData.ConvertGPSToAddressListenerCallback() {
+
+                        @Override
+                        public void onConvertToGPSToAddress(String addr) {
+                            Log.d("TmapTest", "*** updatePositionInfo - addr: " + addr);
+                            add = addr;
+                            Log.d("TmapTest", add);
+                        }
+                    });
+
+                } catch (Exception e) {
+                    Log.d("error", "*** Exception: " + e.getLocalizedMessage());
+                    e.printStackTrace();
+                }
+
+                TMapPoint tMapPoint = new TMapPoint(latitude,longitude);
+                TMapCircle tMapCircle = new TMapCircle();
+                tMapCircle.setCenterPoint(tMapPoint);
+                tMapCircle.setRadius(300);
+                tMapCircle.setCircleWidth(2);
+                tMapCircle.setLineColor(Color.MAGENTA);
+                tMapCircle.setAreaColor(Color.GRAY);
+                tMapCircle.setAreaAlpha(100);
+                tMapView.addTMapCircle("circle", tMapCircle);
+
+                TMapMarkerItem markerItem1 = new TMapMarkerItem();
+                Bitmap bitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.marker);
+
+                markerItem1.setIcon(bitmap);
+                markerItem1.setPosition(0.5f, 1.0f);
+                markerItem1.setTMapPoint(tMapPoint);
+                tMapView.addMarkerItem("markerItem1", markerItem1);
+
+                getTraffic(latitude,longitude);
+            }
+        });
 
         tMapView.setOnClickListenerCallBack(new TMapView.OnClickListenerCallback() {
             @Override
@@ -82,8 +134,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
             @Override
             public boolean onPressUpEvent(ArrayList arrayList, ArrayList arrayList1, TMapPoint tMapPoint, PointF pointF) {
-                Toast.makeText(getApplicationContext(),"lon=" + tMapPoint.getLongitude() + "\nlat=" + tMapPoint.getLatitude(), Toast.LENGTH_SHORT).show();
-                getWeather(tMapPoint.getLatitude(),tMapPoint.getLongitude());
+                Toast.makeText(getApplicationContext(), "lon=" + tMapPoint.getLongitude() + "\nlat=" + tMapPoint.getLatitude(), Toast.LENGTH_SHORT).show();
+                getWeather(tMapPoint.getLatitude(), tMapPoint.getLongitude());
                 return false;
             }
         });
@@ -92,7 +144,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             @Override
             public void onLongPressEvent(ArrayList arrayList, ArrayList arrayList1, TMapPoint tMapPoint) {
                 Toast.makeText(getApplicationContext(), "onLongPress~!", Toast.LENGTH_SHORT).show();
-                getTraffic(tMapPoint.getLatitude(),tMapPoint.getLongitude());
 
                 TMapCircle tMapCircle = new TMapCircle();
                 tMapCircle.setCenterPoint(tMapPoint);
@@ -101,19 +152,39 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 tMapCircle.setLineColor(Color.MAGENTA);
                 tMapCircle.setAreaColor(Color.GRAY);
                 tMapCircle.setAreaAlpha(100);
-                tMapView.addTMapCircle("circle",tMapCircle);
+                tMapView.addTMapCircle("circle", tMapCircle);
 
                 TMapMarkerItem markerItem1 = new TMapMarkerItem();
-                Bitmap bitmap= BitmapFactory.decodeResource(getApplicationContext().getResources(),R.drawable.marker);
+                Bitmap bitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.marker);
 
                 markerItem1.setIcon(bitmap);
-                markerItem1.setPosition(0.5f,1.0f);
+                markerItem1.setPosition(0.5f, 1.0f);
                 markerItem1.setTMapPoint(tMapPoint);
-                tMapView.addMarkerItem("markerItem1",markerItem1);
+                tMapView.addMarkerItem("markerItem1", markerItem1);
 
-                tMapView.setCenterPoint(tMapPoint.getLongitude(),tMapPoint.getLatitude(),true);
+                tMapView.setCenterPoint(tMapPoint.getLongitude(), tMapPoint.getLatitude(), true);
+
+                TMapData tMapData = new TMapData();
+                try {
+                    tMapData.convertGpsToAddress(tMapPoint.getLatitude(), tMapPoint.getLongitude(), new TMapData.ConvertGPSToAddressListenerCallback() {
+
+                        @Override
+                        public void onConvertToGPSToAddress(String addr) {
+                            Log.d("TmapTest", "*** updatePositionInfo - addr: " + addr);
+                            add = addr;
+                            Log.d("TmapTest", add);
+                        }
+                    });
+
+                } catch (Exception e) {
+                    Log.d("error", "*** Exception: " + e.getLocalizedMessage());
+                    e.printStackTrace();
+                }
+
+                getTraffic(tMapPoint.getLatitude(), tMapPoint.getLongitude());
             }
         });
+
 
 // 지도 스크롤 종료
         tMapView.setOnDisableScrollWithZoomLevelListener(new TMapView.OnDisableScrollWithZoomLevelCallback() {
@@ -122,15 +193,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 //Toast.makeText(getApplicationContext(), "zoomLevel=" + zoom + "\nlon=" + centerPoint.getLongitude() + "\nlat=" + centerPoint.getLatitude(), Toast.LENGTH_SHORT).show();
             }
         });
+
     }
+
 
     private void initView() {
         //뷰세팅
         traffic=(TextView)findViewById(R.id.traffic);
         locate = (TextView) findViewById(R.id.locate);
         weather = (TextView) findViewById(R.id.weather);
-        button = (Button) findViewById(R.id.button);
-        button.setOnClickListener(this);
+       // button = (Button) findViewById(R.id.button);
+      //  button.setOnClickListener(this);
+
     }
 
 
@@ -141,8 +215,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         latitude = location.getLatitude();
         longitude = location.getLongitude();
         //날씨 가져오기 통신
-        getWeather(latitude, longitude);
-        getTraffic(latitude,longitude);
+
+        getWeather(latitude,longitude);
         //위치정보 모니터링 제거
         locationManager.removeUpdates(MainActivity.this);
     }
@@ -160,17 +234,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     @Override
     public void onProviderDisabled(String provider) {
 
-    }
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            //버튼 클릭시 현재위치의 날씨를 가져온다
-            case R.id.button:
-                if (locationManager != null) {
-                    requestLocation();
-                }
-                break;
-        }
     }
 
     private void requestLocation() {
@@ -190,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     private interface ApiService {
         //베이스 Url
         String BASEURL = "https://api2.sktelecom.com/";
-        String APPKEY = "1a0702a6-c8e1-4196-9cc3-1f499aba19d5";
+        String APPKEY = "api key";
 
         //get 메소드를 통한 http rest api 통신
         @GET("weather/current/hourly")
@@ -220,6 +283,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                         if(response.isSuccessful()){
                             JsonObject object = response.body();
                             if (object != null) {
+                                locate.setText(add);
                                 traffic.setText(null);
                                 trafficParser(object);
                             }
